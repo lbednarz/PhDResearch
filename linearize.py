@@ -1,12 +1,13 @@
 import numpy as np
 import sympy
 
-def linearize(A: sympy.matrices.dense.MutableDenseMatrix, vars: list):
-    n = np.transpose(A).shape[1]                       # number of states must match columns of A 
+def linearize(A: sympy.matrices.dense.MutableDenseMatrix, vars: list, dim: tuple):
+    n = dim[0] # get dimensions from input argument 
+    m = dim[1]
     # initialize and populate linearized A matrix
-    dA = sympy.Matrix(np.zeros((n, n)))
+    dA = sympy.Matrix(np.zeros((n, m)))
     for i in range(0,n,1):
-        for j in range(0,n,1):
+        for j in range(0,m,1):
             dA[i,j] = sympy.diff(A[i,0],vars[j])
     varsa = list(dA.free_symbols)
 

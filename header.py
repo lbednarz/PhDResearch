@@ -1,25 +1,26 @@
 from dataclasses import dataclass
 import numpy as np 
 import sympy
+from typing import Optional
 
 
 @dataclass
 class ssSystem:
     """Class for holding dynamic and msmt info for a State-Space system"""
     A: np.ndarray
-    B: np.ndarray
-    G: np.ndarray
-    C: np.ndarray
-    D: np.ndarray
+    B: Optional[np.ndarray]
+    G: Optional[np.ndarray]
+    C: Optional[np.ndarray]
+    D: Optional[np.ndarray]
 
 @dataclass
 class SymSystem:
     """Class for holding dynamic and msmt info for a State-Space system in symbolic form"""
     A: sympy.matrices.dense.MutableDenseMatrix  # state transition matrix 
-    B: sympy.matrices.dense.MutableDenseMatrix  # control input matrix 
-    G: sympy.matrices.dense.MutableDenseMatrix  # the process noise input matrix 
-    C: sympy.matrices.dense.MutableDenseMatrix  # the observation matrix
-    D: sympy.matrices.dense.MutableDenseMatrix  # the msmt. noise matrix 
+    B: Optional[sympy.matrices.dense.MutableDenseMatrix]  # control input matrix 
+    G: Optional[sympy.matrices.dense.MutableDenseMatrix]  # the process noise input matrix 
+    C: Optional[sympy.matrices.dense.MutableDenseMatrix]  # the observation matrix
+    D: Optional[sympy.matrices.dense.MutableDenseMatrix]  # the msmt. noise matrix 
 
 @dataclass
 class KF:

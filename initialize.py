@@ -3,8 +3,14 @@ import sympy
 import dataclasses
 import header 
 
-def initialize(sys: header.SymSystem, initials: np.ndarray, var_list: list, fields: list): 
+#def initialize(sys: header.SymSystem, initials: np.ndarray, var_list: list, fields: list): 
+def initialize(init_args: dict):  # NOTE a dataclass would be much safer here  
     # take numeric list of initial values of each variable in var_list and map them 
+    # pull args from dict 
+    sys = init_args.sys
+    initials = init_args.initials
+    var_list = init_args.var_list
+    fields = init_args.fields 
     init_map = dict.fromkeys(var_list)
     i = 0
     for var in var_list:

@@ -1,5 +1,6 @@
 import numpy as np 
 import sympy 
+import scipy as sp
 import control as ct
 import header as h
 import initialize as init
@@ -13,7 +14,8 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
     sysd  = ct.matlab.c2d(ss_sys,Ts,mehtod='zoh',prewarp_frequency=None)
     Phik  = sysd.A 
     GamUk = sysd.B
-    # GamWk = sysd.G
+    #GamWk = sys_num.G*Ts # this is not a proper implmentation of Van Loan's method. 
+    GamWk = sp.linalg.expm(sys_num.A*Ts)*sys_num.G*stats.W*np.transpose(sys_num.G)*sp.linalg.expm(sys_num.A*Ts)*Ts
     Hk    = sysd.C
     D     = sysd.D
     W     = stats.W
@@ -37,3 +39,14 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
         # measurement update 
         K = Pbar[:,k*nx:(k+1)*nx-1]*np.transpose(Hk)*np.linalg.inv((V+Hk*Pbar[:,k*nx:(k+1)*nx-1]*np.transpose(Hk))) # ASSUMES CONSTANT W AND V 
         xhat[:,k] = xbar[:,k] + K*(zk[:,k]-Hk*xbar[:,k])
+        Phat[:,k*nx:(k+1)*nx-1] = np.inv(Pbar[:,k*nx:(k+1)*nx-1]) + np.transpose(Hk)*np.inv(V)*Hk
+        # relinearize for next epoch of KF 
+        init_args.initials = traj[:,k]
+        sys_num = init.initialize(init_args)
+        ss_sys  = ct.ss(sys_num.A,sys_num.B,sys_num.C,sys_num.D)
+        sysd  = ct.matlab.c2d(ss_sys,Ts,mehtod='zoh',prewarp_frequency=None)
+        Phik  = sysd.A 
+        GamUk = sysd.B
+        GamWk = sp.linalg.expm(sys_num.A*Ts)*sys_num.G*stats.W*np.transpose(sys_num.G)*sp.linalg.expm(sys_num.A*Ts)*Ts
+        Hk    = sysd.C
+        D     = sysd.D

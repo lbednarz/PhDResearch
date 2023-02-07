@@ -1,5 +1,6 @@
 import numpy as np 
 import sympy 
+import control as ct
 import header as h
 import initialize as init
 
@@ -8,13 +9,15 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
     # It will need to be relinearized by passing a column of "traj"
     # as the "initials" field in "init_args"
     sys_num = init.initialize(init_args)
-    Phik = sys_num.A 
-    GamUk = sys_num.B
-    GamWk = sys_num.G
-    Hk = sys_num.C
-    vk = sys_num.D
-    W = stats.W
-    V = stats.V
+    ss_sys  = ct.ss(sys_num.A,sys_num.B,sys_num.C,sys_num.D)
+    sysd  = ct.matlab.c2d(ss_sys,Ts,mehtod='zoh',prewarp_frequency=None)
+    Phik  = sysd.A 
+    GamUk = sysd.B
+    # GamWk = sysd.G
+    Hk    = sysd.C
+    D     = sysd.D
+    W     = stats.W
+    V     = stats.V
 
     nx = Phik.shape[0]
     xbar = np.zeros((Phik.shape[1],int(T*Ts))) 

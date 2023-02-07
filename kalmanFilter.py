@@ -10,14 +10,11 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
     # It will need to be relinearized by passing a column of "traj"
     # as the "initials" field in "init_args"
     sys_num = init.initialize(init_args)
-    ss_sys  = ct.ss(sys_num.A,sys_num.B,sys_num.C,sys_num.D)
-    sysd  = ct.matlab.c2d(ss_sys,Ts,mehtod='zoh',prewarp_frequency=None)
-    Phik  = sysd.A 
-    GamUk = sysd.B
-    #GamWk = sys_num.G*Ts # this is not a proper implmentation of Van Loan's method. 
-    GamWk = sp.linalg.expm(sys_num.A*Ts)*sys_num.G*stats.W*np.transpose(sys_num.G)*sp.linalg.expm(sys_num.A*Ts)*Ts
-    Hk    = sysd.C
-    D     = sysd.D
+    Phik  = sys_num.A 
+    GamUk = sys_num.B
+    GamWk = sys_num.G
+    Hk    = sys_num.C
+    D     = sys_num.D
     W     = stats.W
     V     = stats.V
 
@@ -43,10 +40,8 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
         # relinearize for next epoch of KF 
         init_args.initials = traj[:,k]
         sys_num = init.initialize(init_args)
-        ss_sys  = ct.ss(sys_num.A,sys_num.B,sys_num.C,sys_num.D)
-        sysd  = ct.matlab.c2d(ss_sys,Ts,mehtod='zoh',prewarp_frequency=None)
-        Phik  = sysd.A 
-        GamUk = sysd.B
-        GamWk = sp.linalg.expm(sys_num.A*Ts)*sys_num.G*stats.W*np.transpose(sys_num.G)*sp.linalg.expm(sys_num.A*Ts)*Ts
-        Hk    = sysd.C
-        D     = sysd.D
+        Phik  = sys_num.A 
+        GamUk = sys_num.B
+        GamWk = sys_num.G
+        Hk    = sys_num.C
+        D     = sys_num.D

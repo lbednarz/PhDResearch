@@ -31,7 +31,7 @@ class KF:
     P_bar: np.ndarray   # x_bar's covariance 
     z: np.ndarray       # the msmt. vector
     V: np.ndarray       # the covariance of the msmt. noise 
-    # 'u,' the noise vector, is not a feature of the class since it is generated 
+    # 'w,' the noise vector, is not a feature of the class since it is generated 
     W: np.ndarray       # the covariance of the process noise 
     L: np.ndarray       # the Kalman gain
     Phi: np.ndarray     # the state transition matrix 

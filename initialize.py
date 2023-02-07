@@ -18,7 +18,6 @@ def initialize(init_args: dict):  # NOTE a dataclass would be much safer here
         i = i + 1
     # sub in conditions from map and return numeric arrays for the system
     sys_dict = dataclasses.asdict(sys)
-    dict_out = dict.fromkeys(fields)
     keys = sys_dict.keys()
     i = 0
     for key in keys:
@@ -26,9 +25,13 @@ def initialize(init_args: dict):  # NOTE a dataclass would be much safer here
         mat_vars = mat.free_symbols
         for var in mat_vars:
             mat = mat.subs(var, init_map[var])
-        dict_out[fields[i]] = np.array(mat).astype(np.float64)
+        if i == 0: 
+            args = [np.array(mat).astype(np.float64)]
+        else: 
+            args.append(np.array(mat).astype(np.float64))
         i = i + 1 
-    return dict_out 
+    sys_out = header.ssSystem(*args)
+    return sys_out
 
 
 

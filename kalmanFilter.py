@@ -3,6 +3,7 @@ import sympy
 import scipy as sp
 import control as ct
 import header as h
+import simMeasurements as sm
 import initialize as init
 
 def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dict, Ts: float, T: float):
@@ -27,7 +28,7 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
     Phat = np.zeros((nx,int(T*Ts)*nx)+1)
     Phat[0:nx-1,0:nx-1] = stats.P0
 
-    zk = np.zeros((Phik.shape[1],int(T*Ts))) 
+    zk = sm.simMeas(V, init_args, traj.shape[1], traj) 
 
     for k in range(1,int(T*Ts),1):
         # time update 
@@ -38,7 +39,7 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.ndarray, stats: dic
         xhat[:,k] = xbar[:,k] + K*(zk[:,k]-Hk*xbar[:,k])
         Phat[:,k*nx:(k+1)*nx-1] = np.inv(Pbar[:,k*nx:(k+1)*nx-1]) + np.transpose(Hk)*np.inv(V)*Hk
         # relinearize for next epoch of KF 
-        init_args.initials = traj[:,k]
+        init_args["initials"] = traj[:,k]
         sys_num = init.initialize(init_args)
         Phik  = sys_num.A 
         GamUk = sys_num.B

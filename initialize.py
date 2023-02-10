@@ -54,9 +54,9 @@ def initialize(init_args: dict):  # NOTE a dataclass would be much safer here
         for var in mat_vars:
             mat = mat.subs(var, float(init_map[var]))
         if i == 0: 
-            args = [np.array(mat)]
+            args = [np.array(mat).astype(float)]
         else: 
-            args.append(np.array(mat))
+            args.append(np.array(mat).astype(float))
         i = i + 1 
     sys_out = header.ssSystem(*args)
     return sys_out

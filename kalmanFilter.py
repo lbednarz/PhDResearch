@@ -48,7 +48,7 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
         fill = np.matrix([[1],[np.pi/2]]) # these are the signal amplitude and inital phase. They are constant for now.
         initals_hold = np.array(np.concatenate((traj[:,k],fill), axis=0))
         init_args["initials"] = initals_hold
-        sys_num = initialize.initialize(init_args)
+        sys_num = init.initialize(init_args)
         Phik  = sys_num.A 
         GamUk = sys_num.B
         GamWk = sys_num.G

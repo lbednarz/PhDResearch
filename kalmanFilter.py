@@ -23,10 +23,13 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
     xbar = np.matrix(np.zeros((Phik.shape[1],int(T*Ts)))) 
     xhat = np.matrix(np.zeros((Phik.shape[1],int(T*Ts)+1))) # plus one is from initial conditions
     xhat[:,0] = np.transpose(np.matrix(stats["x0"]))
-    Pbar = np.matrix(np.zeros((nx,int(T*Ts)*nx)))
-    Phat = np.matrix(np.zeros((nx,int(T*Ts)*nx+1)))
-    Phat[0:nx,0:nx] = np.matrix(stats["P0"])
-
+    Pbar_list = np.matrix(np.zeros((nx,int(T*Ts)*nx)))
+    Phat_list = np.matrix(np.zeros((nx,int(T*Ts)*nx+1)))
+    Phat_list[0:nx,0:nx] = np.matrix(stats["P0"])
+    Phat = np.matrix(stats["P0"])
+    K_list = np.matrix(np.zeros((nx,Hk.shape[0]*int(T*Ts))))
+    Hk_list = np.matrix(np.zeros((Hk.shape[0],Hk.shape[1]*int(T*Ts))))
+    
     if opt == "S":
         zk = sm.simMeas(V, init_args, traj.shape[1], traj) # simulates measurements of the system
         # convert array into dataframe
@@ -39,11 +42,11 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
     for k in range(1,int(T*Ts),1):
         # time update 
         xbar[:,k] = Phik*xhat[:,k-1] + GamUk*u[:,k-1]
-        Pbar[:,k*nx:(k+1)*nx] = Phik*Phat[:,(k-1)*nx:k*nx]*np.transpose(Phik) + GamWk*W*np.transpose(GamWk) # ASSUMES CONSTANT W AND V
+        Pbar = Phik*Phat*np.transpose(Phik) + GamWk*W*np.transpose(GamWk) # ASSUMES CONSTANT W AND V
         # measurement update 
-        K = Pbar[:,k*nx:(k+1)*nx]*np.transpose(Hk)*np.linalg.inv((V+Hk*Pbar[:,k*nx:(k+1)*nx]*np.transpose(Hk))) # ASSUMES CONSTANT W AND V 
+        K = Pbar*np.transpose(Hk)*np.linalg.inv((V+Hk*Pbar*np.transpose(Hk))) # ASSUMES CONSTANT W AND V 
         xhat[:,k] = xbar[:,k] + K*(zk[:,k]-Hk*xbar[:,k])
-        Phat[:,k*nx:(k+1)*nx] = np.linalg.inv(Pbar[:,k*nx:(k+1)*nx]) + np.transpose(Hk)*np.linalg.inv(V)*Hk
+        Phat = np.linalg.inv(Pbar) + np.transpose(Hk)*np.linalg.inv(V)*Hk
         # relinearize for next epoch of KF 
         fill = np.matrix([[1],[np.pi/2]]) # these are the signal amplitude and inital phase. They are constant for now.
         initals_hold = np.array(np.concatenate((traj[:,k],fill), axis=0))
@@ -54,4 +57,9 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
         GamWk = sys_num.G
         Hk    = np.matrix(sys_num.C)
         # D     = sys_num.D
-    return xhat, Phat, K
+        # store covariance information 
+        Pbar_list[:,k*nx:(k+1)*nx] = Pbar
+        Phat_list[:,k*nx:(k+1)*nx] = Phat
+        K_list[:,(k-1)*Hk.shape[0]:k*Hk.shape[0]]
+        Hk_list[:,(k-1)*Hk.shape[1]:k*Hk.shape[1]]
+    return xhat, Phat_list, Pbar_list, K_list, Hk_list

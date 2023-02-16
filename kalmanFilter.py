@@ -29,6 +29,7 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
     Phat = np.matrix(stats["P0"])
     K_list = np.matrix(np.zeros((nx,Hk.shape[0]*int(T*Ts))))
     Hk_list = np.matrix(np.zeros((Hk.shape[0],Hk.shape[1]*int(T*Ts))))
+    Phik_list = np.matrix(np.zeros((nx,int(T*Ts)*nx)))
     
     if opt == "S":
         zk = sm.simMeas(V, init_args, traj.shape[1], traj) # simulates measurements of the system
@@ -38,6 +39,7 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
         DF.to_csv("zk.csv")
     if opt == "R":
         zk = np.matrix(pd.read_csv('zk.csv'))
+        zk = zk[0:int(T*Ts)]
 
     for k in range(1,int(T*Ts),1):
         # time update 
@@ -46,7 +48,8 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
         # measurement update 
         K = Pbar*np.transpose(Hk)*np.linalg.inv((V+Hk*Pbar*np.transpose(Hk))) # ASSUMES CONSTANT W AND V 
         xhat[:,k] = xbar[:,k] + K*(zk[:,k]-Hk*xbar[:,k])
-        Phat = np.linalg.inv(Pbar) + np.transpose(Hk)*np.linalg.inv(V)*Hk
+        #Phat = np.linalg.inv(Pbar) + np.transpose(Hk)*np.linalg.inv(V)*Hk
+        Phat = (np.eye(nx,nx) - K*Hk)*Pbar
         # relinearize for next epoch of KF 
         fill = np.matrix([[1],[np.pi/2]]) # these are the signal amplitude and inital phase. They are constant for now.
         initals_hold = np.array(np.concatenate((traj[:,k],fill), axis=0))
@@ -62,4 +65,5 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
         Phat_list[:,k*nx:(k+1)*nx] = Phat
         K_list[:,(k-1)*Hk.shape[0]:k*Hk.shape[0]]
         Hk_list[:,(k-1)*Hk.shape[1]:k*Hk.shape[1]]
-    return xhat, Phat_list, Pbar_list, K_list, Hk_list
+        Phik_list[:,k*nx:(k+1)*nx] = Phik
+    return xhat, Phat_list, Pbar_list, K_list, Hk_list, Phik_list 

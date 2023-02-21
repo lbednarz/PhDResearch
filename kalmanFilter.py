@@ -43,13 +43,13 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
 
     for k in range(1,int(T*Ts),1):
         # time update 
-        xbar[:,k] = Phik*xhat[:,k-1] + GamUk*u[:,k-1]
-        Pbar = Phik*Phat*np.transpose(Phik) + GamWk*W*np.transpose(GamWk) # ASSUMES CONSTANT W AND V
+        xbar[:,k] = Phik @ xhat[:,k-1] + GamUk @ u[:,k-1]
+        Pbar = Phik @ Phat @ np.transpose(Phik) + GamWk @ W @ np.transpose(GamWk) # ASSUMES CONSTANT W AND V
         # measurement update 
-        K = Pbar*np.transpose(Hk)*np.linalg.inv((V+Hk*Pbar*np.transpose(Hk))) # ASSUMES CONSTANT W AND V 
-        xhat[:,k] = xbar[:,k] + K*(zk[:,k]-Hk*xbar[:,k])
+        K = Pbar @ np.transpose(Hk) @ np.linalg.inv((V + Hk @ Pbar @ np.transpose(Hk))) # ASSUMES CONSTANT W AND V 
+        xhat[:,k] = xbar[:,k] + K @ (zk[:,k] - Hk @ xbar[:,k])
         #Phat = np.linalg.inv(Pbar) + np.transpose(Hk)*np.linalg.inv(V)*Hk
-        Phat = (np.eye(nx,nx) - K*Hk)*Pbar
+        Phat = (np.eye(nx,nx) - K @ Hk) @ Pbar
         # relinearize for next epoch of KF 
         fill = np.matrix([[1],[np.pi/2]]) # these are the signal amplitude and inital phase. They are constant for now.
         initals_hold = np.array(np.concatenate((traj[:,k],fill), axis=0))
@@ -67,3 +67,4 @@ def KalmanFilter(sys: h.SymSystem, init_args: dict, traj: np.matrix, stats: dict
         Hk_list[:,(k-1)*Hk.shape[1]:k*Hk.shape[1]]
         Phik_list[:,k*nx:(k+1)*nx] = Phik
     return xhat, Phat_list, Pbar_list, K_list, Hk_list, Phik_list 
+
